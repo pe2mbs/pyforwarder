@@ -111,7 +111,7 @@ class Transfer( threading.Thread ):
                                 sslargs[ 'cert_reqs' ] = ssl.CERT_OPTIONAL
 
                     if 'ssl-certificate' in self.__dest:
-                        sslargs[ 'certfile' ] = os.path.abspath( self.__dest[ 'ssl-certificate' ] ),
+                        sslargs[ 'certfile' ] = os.path.abspath( self.__dest[ 'ssl-certificate' ] )
                         sslargs[ 'keyfile'  ] = os.path.abspath( self.__dest[ 'ssl-key' ] )
 
                     elif 'ssl-cert-bundle' in self.__dest:
