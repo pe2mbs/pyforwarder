@@ -1,8 +1,10 @@
 import sys
 import os
+import ssl
 import getopt
 import json
 import yaml
+import hexdump
 from socket import socket, AF_INET, SOCK_STREAM
 import select
 import threading
@@ -21,6 +23,9 @@ ports = {
 
 global verbose
 verbose = False
+
+global trace
+trace = False
 
 global config
 config = {
@@ -64,6 +69,14 @@ class Transfer( threading.Thread ):
         self.__conn = connection
         self.__dest = destination
         self.__destSock = socket( AF_INET, SOCK_STREAM )
+        self.__sslSock = None
+        if 'protocol' in self.__dest:
+            if self.__dest[ 'protocol' ] == 'ssltls':
+                # need to handle SSL/TLS in the forwarder
+                self.__sslSock = self.__destSock
+                self.__destSock = ssl.wrap_socket( self.__destSock )
+                self.__destSock.context.check_hostname = False
+
         self.__destSock.connect( ( self.__dest[ 'addr' ], self.__dest[ 'port' ] ) )
         self.__destSock.setblocking( 0 )
         self.start()
@@ -92,7 +105,13 @@ class Transfer( threading.Thread ):
 
                         if len( data ) == 0:    # close
                             self.__destSock.close()
+                            if trace:
+                                print( "SRC: DISCONNECT" )
                             break
+
+                        if trace:
+                            for line in hexdump.hexdump( data, 'generator' ):
+                                print( "SRC: {}".format( line ) )
 
                         self.__destSock.sendall( data )
 
@@ -103,7 +122,13 @@ class Transfer( threading.Thread ):
 
                         if len( data ) == 0:
                             self.__conn.close()
+                            if trace:
+                                print( "DST: DISCONNECT" )
                             break
+
+                        if trace:
+                            for line in hexdump.hexdump( data, 'generator' ):
+                                print( "DST: {}".format( line ) )
 
                         self.__conn.send( data )
 
@@ -129,7 +154,8 @@ Syntax:
     forwarder.py [ <options> ] <config-file>
       
 Options:
-    -v
+    -v          Verbose information 
+    -t/--trace  Trace the comminicatie 
     -h/--help   This information
       
 ''' )
@@ -146,7 +172,7 @@ def banner():
 
 
 def main( argv ):
-    global config, verbose
+    global config, verbose, trace
     banner()
     try:
         opts, args = getopt.getopt( sys.argv[ 1: ],"hv",[ "help" ] )
@@ -161,6 +187,9 @@ def main( argv ):
     for o,a in opts:
         if o == "-v":
             verbose = True
+
+        elif o in ( "-t","--trace"):
+            trace = True
 
         elif o in ( "-h", "--help" ):
             usage()
