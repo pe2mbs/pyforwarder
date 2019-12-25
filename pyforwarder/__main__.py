@@ -116,7 +116,7 @@ class Transfer( threading.Thread ):
                             print( "Receive source {} {}".format( self.__name, len( data ) ) )
 
                         if len( data ) == 0:    # close
-                            self.__destSock.close()
+                            self.__conn.close()
                             if trace:
                                 print( SEPLINE )
                                 print( "SRC: DISCONNECT" )
@@ -138,20 +138,31 @@ class Transfer( threading.Thread ):
                             print( "Receive dest {} {}".format( self.__name, len( data ) ) )
 
                         if len( data ) == 0:
-                            self.__conn.close()
+                            self.__destSock.close()
                             if trace:
                                 print( SEPLINE )
                                 print( "DST: DISCONNECT" )
+
                             break
 
                         if trace:
                             print( SEPLINE )
-                            print( "SRC: {}".format( data ) )
+                            print( "DST: {}".format( data ) )
                             if hexd:
                                 for line in hexdump.hexdump( data, 'generator' ):
                                     print( "DST: {}".format( line ) )
 
                         self.__conn.send( data )
+
+                if self.__conn.fileno() == -1:
+                    self.__destSock.close()
+                    print( "DST: DISCONNECT" )
+                    break
+
+                if self.__destSock.fileno() == -1:
+                    self.__conn.close()
+                    print( "SRC: DISCONNECT" )
+                    break
 
                 if len( exceptional ) > 0:
                     if verbose:
