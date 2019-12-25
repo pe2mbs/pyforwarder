@@ -82,7 +82,10 @@ class Transfer( threading.Thread ):
             if self.__dest[ 'protocol' ] == 'ssltls':
                 # need to handle SSL/TLS in the forwarder
                 self.__sslSock = self.__destSock
-                if not self.__dest[ 'ssl-verify' ] if 'ssl-verify' in self.__dest else True:
+                sslVerify = self.__dest[ 'ssl-verify' ] if 'ssl-verify' in self.__dest else True
+                print( "sslVerify: {}".format( sslVerify ) )
+                if not sslVerify:
+                    print( "Use unferified context" )
                     ssl._create_default_https_context = ssl._create_unverified_context
 
                 self.__destSock = ssl.wrap_socket( self.__destSock )
