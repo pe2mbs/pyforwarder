@@ -89,8 +89,9 @@ class Transfer( threading.Thread ):
                     ssl._create_default_https_context = ssl._create_unverified_context
 
                 self.__destSock = ssl.wrap_socket( self.__destSock )
-                self.__destSock.context.verify_mode = ssl.CERT_OPTIONAL
-                self.__destSock.context.check_hostname = self.__dest[ 'check-hostname' ] if 'check-hostname' in self.__dest else True
+                if sslVerify:
+                    self.__destSock.context.verify_mode = ssl.CERT_OPTIONAL
+                    self.__destSock.context.check_hostname = self.__dest[ 'check-hostname' ] if 'check-hostname' in self.__dest else True
 
         self.__destSock.connect( ( self.__dest[ 'addr' ], self.__dest[ 'port' ] ) )
         if trace:
