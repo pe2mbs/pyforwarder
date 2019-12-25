@@ -40,6 +40,7 @@ config = {
     ]
 }
 
+SEPLINE = '-' * 60
 
 class Listener( socket ):
     def __init__( self, host, port, destination, listen = 2 ):
@@ -70,6 +71,10 @@ class Transfer( threading.Thread ):
         self.__dest = destination
         self.__destSock = socket( AF_INET, SOCK_STREAM )
         self.__sslSock = None
+        if trace:
+            print( SEPLINE )
+            print( "SRC: CONNECT" )
+
         if 'protocol' in self.__dest:
             if self.__dest[ 'protocol' ] == 'ssltls':
                 # need to handle SSL/TLS in the forwarder
@@ -78,6 +83,10 @@ class Transfer( threading.Thread ):
                 self.__destSock.context.check_hostname = False
 
         self.__destSock.connect( ( self.__dest[ 'addr' ], self.__dest[ 'port' ] ) )
+        if trace:
+            print( SEPLINE )
+            print( "DST: CONNECT" )
+
         self.__destSock.setblocking( 0 )
         self.start()
         return
@@ -106,10 +115,13 @@ class Transfer( threading.Thread ):
                         if len( data ) == 0:    # close
                             self.__destSock.close()
                             if trace:
+                                print( SEPLINE )
                                 print( "SRC: DISCONNECT" )
+
                             break
 
                         if trace:
+                            print( SEPLINE )
                             for line in hexdump.hexdump( data, 'generator' ):
                                 print( "SRC: {}".format( line ) )
 
@@ -123,10 +135,12 @@ class Transfer( threading.Thread ):
                         if len( data ) == 0:
                             self.__conn.close()
                             if trace:
+                                print( SEPLINE )
                                 print( "DST: DISCONNECT" )
                             break
 
                         if trace:
+                            print( SEPLINE )
                             for line in hexdump.hexdump( data, 'generator' ):
                                 print( "DST: {}".format( line ) )
 
