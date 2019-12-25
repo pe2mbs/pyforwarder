@@ -175,7 +175,7 @@ def main( argv ):
     global config, verbose, trace
     banner()
     try:
-        opts, args = getopt.getopt( sys.argv[ 1: ],"hv",[ "help" ] )
+        opts, args = getopt.getopt( sys.argv[ 1: ],"htv",[ "help", "trace" ] )
 
     except getopt.GetoptError as err:
         # print help information and exit:
