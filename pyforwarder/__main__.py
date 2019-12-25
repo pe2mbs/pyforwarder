@@ -27,6 +27,9 @@ verbose = False
 global trace
 trace = False
 
+global hexd
+hexd = False
+
 global config
 config = {
     'ports': ports,
@@ -96,7 +99,7 @@ class Transfer( threading.Thread ):
         return self.__active
 
     def run( self ):
-        global verbose
+        global verbose, hexd
         try:
             if verbose:
                 print( "Starting the transfer: {}".format( self.__name ) )
@@ -122,8 +125,10 @@ class Transfer( threading.Thread ):
 
                         if trace:
                             print( SEPLINE )
-                            for line in hexdump.hexdump( data, 'generator' ):
-                                print( "SRC: {}".format( line ) )
+                            print( "SRC: {}".format( data ) )
+                            if hexd:
+                                for line in hexdump.hexdump( data, 'generator' ):
+                                    print( "SRC: {}".format( line ) )
 
                         self.__destSock.sendall( data )
 
@@ -141,8 +146,10 @@ class Transfer( threading.Thread ):
 
                         if trace:
                             print( SEPLINE )
-                            for line in hexdump.hexdump( data, 'generator' ):
-                                print( "DST: {}".format( line ) )
+                            print( "SRC: {}".format( data ) )
+                            if hexd:
+                                for line in hexdump.hexdump( data, 'generator' ):
+                                    print( "DST: {}".format( line ) )
 
                         self.__conn.send( data )
 
@@ -168,9 +175,10 @@ Syntax:
     forwarder.py [ <options> ] <config-file>
       
 Options:
-    -v          Verbose information 
-    -t/--trace  Trace the comminicatie 
-    -h/--help   This information
+    -v              Verbose information 
+    -t/--trace      Trace the communicatie
+    -H/--hexdump    Hexdump the communicatie (works in trace mode)  
+    -h/--help       This information
       
 ''' )
 
@@ -186,10 +194,10 @@ def banner():
 
 
 def main( argv ):
-    global config, verbose, trace
+    global config, verbose, trace, hexd
     banner()
     try:
-        opts, args = getopt.getopt( sys.argv[ 1: ],"htv",[ "help", "trace" ] )
+        opts, args = getopt.getopt( sys.argv[ 1: ],"htHv",[ "help", "trace", "hexdump" ] )
 
     except getopt.GetoptError as err:
         # print help information and exit:
@@ -204,6 +212,9 @@ def main( argv ):
 
         elif o in ( "-t","--trace"):
             trace = True
+
+        elif o in ( "-H","--hexdump" ):
+            hexd = True
 
         elif o in ( "-h", "--help" ):
             usage()
