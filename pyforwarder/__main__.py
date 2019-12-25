@@ -87,20 +87,47 @@ class Transfer( threading.Thread ):
                 if verbose or trace:
                     print( "sslVerify: {}".format( sslVerify ) )
 
+                sslargs = {}
                 if not sslVerify:
                     if verbose or trace:
                         print( "Use unferified context" )
 
                     ssl._create_default_https_context = ssl._create_unverified_context
 
-                self.__destSock = ssl.wrap_socket( self.__destSock )
+                else:
+                    sslargs = {
+                        'cert_reqs': ssl.CERT_NONE,
+                    }
+                    if 'ssl-required' in self.__dest:
+                        value = self.__dest[ 'ssl-required' ]
+                        if isinstance( value, bool ):
+                            sslargs[ 'cert_reqs' ] = ssl.CERT_REQUIRED if value else ssl.CERT_OPTIONAL
+
+                        elif isinstance( value, str ):
+                            if value in ( 'yes', 'true' ):
+                                sslargs[ 'cert_reqs' ] = ssl.CERT_REQUIRED
+
+                            elif value == 'optional':
+                                sslargs[ 'cert_reqs' ] = ssl.CERT_OPTIONAL
+
+                    if 'ssl-certificate' in self.__dest:
+                        sslargs[ 'certfile' ] = self.__dest[ 'ssl-certificate' ],
+                        sslargs[ 'keyfile'  ] = self.__dest[ 'ssl-key' ]
+
+                    elif 'ssl-cert-bundle' in self.__dest:
+                        sslargs[ 'ca_certs' ] =  self.__dest[ 'ssl-cert-bundle' ]
+
+                self.__destSock = ssl.wrap_socket( self.__destSock, **sslargs )
                 if sslVerify:
                     self.__destSock.context.verify_mode = ssl.CERT_OPTIONAL
+
                     sslCheckHost = self.__dest[ 'ssl-check-host' ] if 'ssl-check-host' in self.__dest else True
                     if verbose or trace:
                         print( "sslCheckHost: {}".format( sslCheckHost ) )
 
                     self.__destSock.context.check_hostname = sslCheckHost
+
+
 
         self.__destSock.connect( ( self.__dest[ 'addr' ], self.__dest[ 'port' ] ) )
         if trace:
@@ -115,9 +142,9 @@ class Transfer( threading.Thread ):
         return self.__active
 
     def run( self ):
-        global verbose, hexd
+        global verbose, hexd, trace
         try:
-            if verbose:
+            if verbose or trace:
                 print( "Starting the transfer: {}".format( self.__name ) )
 
             inputs = [ self.__conn, self.__destSock ]
@@ -128,7 +155,7 @@ class Transfer( threading.Thread ):
                 for rd in readable:
                     if rd == self.__conn:
                         data = self.__conn.recv( 4096*5 )
-                        if verbose:
+                        if verbose or trace:
                             print( "Receive source {} {}".format( self.__name, len( data ) ) )
 
                         if len( data ) == 0:    # close
@@ -151,7 +178,7 @@ class Transfer( threading.Thread ):
 
                     elif rd == self.__destSock:
                         data = self.__destSock.recv( 4096*5 )
-                        if verbose:
+                        if verbose or trace:
                             print( "Receive dest {} {}".format( self.__name, len( data ) ) )
 
                         if len( data ) == 0:
@@ -174,16 +201,20 @@ class Transfer( threading.Thread ):
 
                 if not self.__conn:
                     self.__destSock.close()
-                    print( "DST: DISCONNECT" )
+                    if verbose or trace:
+                        print( "DST: DISCONNECT" )
+
                     break
 
                 if not self.__destSock:
                     self.__conn.close()
-                    print( "SRC: DISCONNECT" )
+                    if verbose or trace:
+                        print( "SRC: DISCONNECT" )
+
                     break
 
                 if len( exceptional ) > 0:
-                    if verbose:
+                    if verbose or trace:
                         print( "exception on socket: {}".format( self.__name ) )
 
                     break
@@ -191,7 +222,7 @@ class Transfer( threading.Thread ):
         except Exception as exc:
             print( exc, file = sys.stderr )
 
-        if verbose:
+        if verbose or trace:
             print( "Finished with transfer: {}".format( self.__name ) )
 
         self.__active = False
