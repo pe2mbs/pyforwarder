@@ -111,11 +111,11 @@ class Transfer( threading.Thread ):
                                 sslargs[ 'cert_reqs' ] = ssl.CERT_OPTIONAL
 
                     if 'ssl-certificate' in self.__dest:
-                        sslargs[ 'certfile' ] = self.__dest[ 'ssl-certificate' ],
-                        sslargs[ 'keyfile'  ] = self.__dest[ 'ssl-key' ]
+                        sslargs[ 'certfile' ] = os.path.abspath( self.__dest[ 'ssl-certificate' ] ),
+                        sslargs[ 'keyfile'  ] = os.path.abspath( self.__dest[ 'ssl-key' ] )
 
                     elif 'ssl-cert-bundle' in self.__dest:
-                        sslargs[ 'ca_certs' ] =  self.__dest[ 'ssl-cert-bundle' ]
+                        sslargs[ 'ca_certs' ] =  os.path.abspath( self.__dest[ 'ssl-cert-bundle' ] )
 
                 self.__destSock = ssl.wrap_socket( self.__destSock, **sslargs )
                 if sslVerify:
