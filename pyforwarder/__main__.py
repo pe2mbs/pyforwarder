@@ -83,11 +83,10 @@ class Transfer( threading.Thread ):
                 # need to handle SSL/TLS in the forwarder
                 self.__sslSock = self.__destSock
                 self.__destSock = ssl.wrap_socket( self.__destSock )
-                self.__destSock.context.check_hostname = False
+                self.__destSock.context.check_hostname = self.__dest[ 'ssl-verify' ] if 'ssl-verify' in self.__dest else True
 
         self.__destSock.connect( ( self.__dest[ 'addr' ], self.__dest[ 'port' ] ) )
         if trace:
-            print( SEPLINE )
             print( "DST: CONNECT" )
 
         self.__destSock.setblocking( 0 )
