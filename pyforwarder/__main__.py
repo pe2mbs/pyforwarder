@@ -107,7 +107,7 @@ class Transfer( threading.Thread ):
             inputs = [ self.__conn, self.__destSock ]
             outputs = []
             excepts = [ self.__conn, self.__destSock ]
-            while True:
+            while self.__conn and self.__destSock:
                 readable, writable, exceptional = select.select( inputs, outputs, excepts )
                 for rd in readable:
                     if rd == self.__conn:
@@ -117,6 +117,7 @@ class Transfer( threading.Thread ):
 
                         if len( data ) == 0:    # close
                             self.__conn.close()
+                            self.__conn = None
                             if trace:
                                 print( SEPLINE )
                                 print( "SRC: DISCONNECT" )
@@ -139,6 +140,7 @@ class Transfer( threading.Thread ):
 
                         if len( data ) == 0:
                             self.__destSock.close()
+                            self.__destSock = None
                             if trace:
                                 print( SEPLINE )
                                 print( "DST: DISCONNECT" )
@@ -154,12 +156,12 @@ class Transfer( threading.Thread ):
 
                         self.__conn.send( data )
 
-                if self.__conn.fileno() == -1:
+                if not self.__conn:
                     self.__destSock.close()
                     print( "DST: DISCONNECT" )
                     break
 
-                if self.__destSock.fileno() == -1:
+                if not self.__destSock:
                     self.__conn.close()
                     print( "SRC: DISCONNECT" )
                     break
