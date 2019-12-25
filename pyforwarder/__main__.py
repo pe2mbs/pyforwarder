@@ -67,6 +67,7 @@ class Listener( socket ):
 
 class Transfer( threading.Thread ):
     def __init__( self, name, connection, destination ):
+        global verbose, trace
         self.__active = True
         threading.Thread.__init__( self )
         self.__name = name
