@@ -117,6 +117,9 @@ class Transfer( threading.Thread ):
                     elif 'ssl-cert-bundle' in self.__dest:
                         sslargs[ 'ca_certs' ] =  os.path.abspath( self.__dest[ 'ssl-cert-bundle' ] )
 
+                if verbose or trace:
+                    print( json.dumps( sslargs, indent = 4 ) )
+
                 self.__destSock = ssl.wrap_socket( self.__destSock, **sslargs )
                 if sslVerify:
                     self.__destSock.context.verify_mode = ssl.CERT_OPTIONAL
