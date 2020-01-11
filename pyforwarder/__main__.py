@@ -110,12 +110,12 @@ class Transfer( threading.Thread ):
                             elif value == 'optional':
                                 sslargs[ 'cert_reqs' ] = ssl.CERT_OPTIONAL
 
-                    if 'ssl-certificate' in self.__dest:
+                    if  'ssl-ca-bundle' in self.__dest:
+                        sslargs[ 'ca_certs' ] = os.path.abspath( self.__dest[ 'ssl-ca-bundle' ] )
+
+                    elif 'ssl-certificate' in self.__dest:
                         sslargs[ 'certfile' ] = os.path.abspath( self.__dest[ 'ssl-certificate' ] )
                         sslargs[ 'keyfile'  ] = os.path.abspath( self.__dest[ 'ssl-key' ] )
-
-                    elif 'ssl-cert-bundle' in self.__dest:
-                        sslargs[ 'ca_certs' ] =  os.path.abspath( self.__dest[ 'ssl-cert-bundle' ] )
 
                 if verbose or trace:
                     print( json.dumps( sslargs, indent = 4 ) )
@@ -130,13 +130,11 @@ class Transfer( threading.Thread ):
 
                     self.__destSock.context.check_hostname = sslCheckHost
 
-
-
         self.__destSock.connect( ( self.__dest[ 'addr' ], self.__dest[ 'port' ] ) )
         if trace:
             print( "DST: CONNECT" )
 
-        self.__destSock.setblocking( 0 )
+        #self.__destSock.setblocking( 0 )
         self.start()
         return
 
@@ -150,6 +148,10 @@ class Transfer( threading.Thread ):
             if verbose or trace:
                 print( "Starting the transfer: {}".format( self.__name ) )
 
+            #
+            #   __conn      = the socket to the client
+            #   __destSock  = the socket to the actual server with optional SSL/TLS
+            #
             inputs = [ self.__conn, self.__destSock ]
             outputs = []
             excepts = [ self.__conn, self.__destSock ]
@@ -172,7 +174,9 @@ class Transfer( threading.Thread ):
 
                         if trace:
                             print( SEPLINE )
-                            print( "SRC: {}".format( data ) )
+                            for line in data.decode('utf-8').splitlines():
+                                print( "SRC: {}".format( line ) )
+
                             if hexd:
                                 for line in hexdump.hexdump( data, 'generator' ):
                                     print( "SRC: {}".format( line ) )
@@ -182,20 +186,22 @@ class Transfer( threading.Thread ):
                     elif rd == self.__destSock:
                         data = self.__destSock.recv( 4096*5 )
                         if verbose or trace:
-                            print( "Receive dest {} {}".format( self.__name, len( data ) ) )
+                            print( "Receive dest {} {} {}".format( self.__name, len( data ), "" if self.__sslSock is None else "With SSL/TLS" ) )
 
                         if len( data ) == 0:
                             self.__destSock.close()
                             self.__destSock = None
                             if trace:
                                 print( SEPLINE )
-                                print( "DST: DISCONNECT" )
+                                print( "{}: DISCONNECT".format( "DST" if self.__sslSock is None else "SSL-DST" ) )
 
                             break
 
                         if trace:
                             print( SEPLINE )
-                            print( "DST: {}".format( data ) )
+                            for line in data.decode( 'utf-8' ).splitlines():
+                                print( "{}: {}".format( "DST" if self.__sslSock is None else "SSL-DST", line ) )
+
                             if hexd:
                                 for line in hexdump.hexdump( data, 'generator' ):
                                     print( "DST: {}".format( line ) )
@@ -205,7 +211,7 @@ class Transfer( threading.Thread ):
                 if not self.__conn:
                     self.__destSock.close()
                     if verbose or trace:
-                        print( "DST: DISCONNECT" )
+                        print( "{}: DISCONNECT".format( "DST" if self.__sslSock is None else "SSL-DST" ) )
 
                     break
 
