@@ -1,4 +1,4 @@
-# pyforwarder a TCP/IP communication trace tool with SSL/TLS termination.
+# pyforwarder a raw socket proxy with optional SSL/TLS termination and trace capability
 
 With this tool you can intercept communication between a server an a client, 
 assuming that you can alter the communication parameters off the client.
@@ -29,11 +29,14 @@ The configuration file can be a YAML or JSON formatted file. The example below
 shows the YAML format.
    
 ```yaml
+# Version of the configuration
 version: 2
+# override commandline options
 options:
   trace: true
   hexdump: true
   verbose: true
+# logging Python style
 logging:
   version: 1
   formatters:
@@ -46,7 +49,7 @@ logging:
   handlers:
     console:
       class: logging.StreamHandler
-      level: INFO
+      level: DEBUG
       formatter: verbose
       stream: ext://sys.stdout
     file:
@@ -61,12 +64,20 @@ logging:
     handlers:
     - console
     - file
+# declare extra port descriptions
+ports:
+  dynamic-proxy:
+    port: 18080
+    protocol: tcp
+    description: dynamic proxy using the TcpSocket() from psocket
+# actual forwarding rules
 hosts:
+  # forward port 8008 to imaps with SSL/TLS ternination
 - source:
     addr: 0.0.0.0
     port: 8008
   destination:
-    addr: mail.pe2mbs.nl
+    addr: 192.168.123.5
     port: imaps
     use-ssl-tls: true
     ssl-tls:
@@ -74,10 +85,13 @@ hosts:
       check-host: false
       required: optional
       #ca-bundle: yourDomain.ca-bundle
+      #certificate: certifcate.pem
+      #key: private-key.key
+  # forward port 8009 to smtps with SSL/TLS ternination
 - source:
     port: 8009
   destination:
-    addr: mail.pe2mbs.nl
+    addr: 192.168.123.5
     port: smtps
     use-ssl-tls: false
     ssl-tls:
@@ -86,19 +100,25 @@ hosts:
       required: optional
       #certificate: certifcate.pem
       #key: private-key.key
+  # froward port 8010 on localhost to 192.168.123.6:25057, currently disabled
 - source:
     addr: localhost
     port: 8010
   destination:
-    addr: daecon.pe2mbs.nl
+    addr: 192.168.123.6
     port: 25057
     use-ssl-tls: false
   enabled: false
-ports:
-  http-spotweb:
-    port: 25057
-    description: http-alternate
-    protocol: TCP   
+  # froward port 18080 on 192.168.123.100 to xxx.xxx.xxx.xxx:yyyyy
+  # the actual address, port, ssl info are provided via the TcpSocket
+  # class in pyforwarder.psocket
+- source:
+    addr: 192.168.123.100
+    port: 18080
+  destination:
+    proxy:  true
+    username: guest
+    password: guest
 ```
 
 ### version
@@ -172,6 +192,7 @@ protocol name with the following attributes;
 * protocol: may be set to TCP and/or UDP, when both need to be set the list syntax
             is used. 
 
+The predefined ports: 
 ```yaml
   ftp:          
     port: 20
