@@ -1,14 +1,34 @@
 # pyforwarder a raw socket proxy with optional SSL/TLS termination and trace capability
 
 With this tool you can intercept communication between a server an a client, 
-assuming that you can alter the communication parameters off the client.
+assuming that you can alter the communication parameters of the client.
 
 It can optionally also perform the SSL/TLS termination to the server, so that
 the communication to the client is in clear text.
 
-It can handle multiple sessions, multimple servers ans ports at the same time.
+It can handle multiple sessions, multiple servers ans ports at the same time.
 
-At this moment only TCP sessions are supported.
+At this moment TCP sessions are fully supported (stable).
+At this moment UDP messages is supported (unstable)
+
+## Installation
+### PIP
+```bash
+
+> pip install pyforwarder
+
+```
+
+### from source
+```bash
+
+> git clone https://github.com/pe2mbs/pyforwarder.git
+> cd pyforwarder
+> pip install .
+
+```
+
+##    
 
 
 ## Basic operation
@@ -23,6 +43,29 @@ The basic operation is simple start the pyforwarder with a configuration file.
 Depending on the settings it shows the program banner and optionally verbose 
 and trace information what is happing.
 
+## Usage
+There are two types of usages.
+1.  raw socket with an exact configuration in the configuration file.
+2.  proxy socket where the configuration is passed on over the initial socket
+
+### raw socket
+For each destination there must be and complete config uration with address, 
+port and optional SSL/TLS parameters for the destination and for the source 
+the address and port where pyforwarder listens on. 
+   
+    
+### proxy socket
+For proxy socket in the configuration the source address and port must be defined 
+where pyforwarder listens on. And for the destination the proxy must be enabled
+with optional the username and password (these are send in cleartext over the session).      
+
+The proxy handshake is simple the server says HELO <name> and the client respond 
+with OLEH <json-parameters>      
+
+the pyforwarder.csocket module contains a class TcpSocket where this mechanism is
+implemented.
+
+**NOTE:** proxy socket works only for TCP sessions.
 
 ## Configuration
 The configuration file can be a YAML or JSON formatted file. The example below 
