@@ -53,11 +53,10 @@ For each destination there must be and complete config uration with address,
 port and optional SSL/TLS parameters for the destination and for the source 
 the address and port where pyforwarder listens on. 
    
-    
 ### proxy socket
 For proxy socket in the configuration the source address and port must be defined 
 where pyforwarder listens on. And for the destination the proxy must be enabled
-with optional the username and password (these are send in cleartext over the session).      
+with optional the username and password (these are send in encoded over the session).      
 
 The proxy handshake is simple the server says HELO <name> and the client respond 
 with OLEH <json-parameters>      

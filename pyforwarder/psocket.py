@@ -17,6 +17,7 @@
 #   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 #   Boston, MA 02110-1301 USA
 #
+import hashlib
 import socket
 import json
 from typing import Union
@@ -54,10 +55,12 @@ class TcpSocket( socket.socket ):
         elif isinstance( address, str ):
             address = address.split(':')
 
+        m = hashlib.sha256()
+        userpass = "{}:{}".format( kwargs.get( 'username', 'guest' ), kwargs.get( 'password', 'guest' ) )
+        m.update( userpass.encode( "ascii" ) )
         params = { 'addr': address[ 0 ],
                    'port': address[ 1 ],
-                   'username': kwargs.get( 'username', 'guest' ),
-                   'password': kwargs.get( 'password', 'guest' ) }
+                   'userpass': m.digest() }
 
         if 'ssl-tls' in kwargs:
             ssltls = kwargs.get( 'ssl-tls', { } )

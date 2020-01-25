@@ -20,6 +20,7 @@
 import traceback
 import ssl
 import json
+import hashlib
 import hexdump
 import select
 import threading
@@ -56,7 +57,10 @@ class TcpTransfer( threading.Thread ):
             data = self.__conn.recv( 1024 * 20 )
             if data.startswith( b'OLEH ' ):
                 data = json.loads( data.decode( 'utf-8' )[4:] )
-                if data[ 'username' ] == self.__dest.username or data[ 'password' ] == self.__dest.password:
+                m = hashlib.sha256()
+                userpass = "{}:{}".format( self.__dest.username, self.__dest.password )
+                m.update( userpass.encode( "ascii" ) )
+                if data[ 'userpass' ] == m.digest():
                     self.__dest.setProxy( data )
 
                 else:
