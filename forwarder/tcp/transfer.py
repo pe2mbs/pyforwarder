@@ -21,10 +21,11 @@ import traceback
 import ssl
 import json
 import hashlib
+import base64
 import hexdump
 import select
 import threading
-import pyforwarder.api as API
+import forwarder.api as API
 from socket import socket, AF_INET, SOCK_STREAM, SHUT_RDWR
 
 SEPLINE = '-' * 60
@@ -53,21 +54,23 @@ class TcpTransfer( threading.Thread ):
         API.logger.debug( "Session: {session:<10} SRC CONNECT".format( session = self.__session ) )
 
         if self.__dest.proxy:
-            self.__conn.send( "HELO pyforwarder TCP proxy" )
+            self.__conn.send( b"HELO forwarder TCP proxy" )
             data = self.__conn.recv( 1024 * 20 )
             if data.startswith( b'OLEH ' ):
                 data = json.loads( data.decode( 'utf-8' )[4:] )
                 m = hashlib.sha256()
                 userpass = "{}:{}".format( self.__dest.username, self.__dest.password )
                 m.update( userpass.encode( "ascii" ) )
-                if data[ 'userpass' ] == m.digest():
+                if data[ 'userpass' ] == base64.b64encode( m.digest() ).decode('utf-8'):
                     self.__dest.setProxy( data )
 
                 else:
+                    self.__conn.close()
                     raise Exception( "Incorrect username/password from client on OLEH" )
 
             else:
-                raise Exception( "Incorrect answer from client on HELO" )
+                self.__conn.close()
+                raise Exception( "Incorrect answer from client on HELO -> {}".format( data ) )
 
         if self.__dest.useSslTls:
             # need to handle SSL/TLS in the forwarder
@@ -160,14 +163,14 @@ class TcpTransfer( threading.Thread ):
                             self.__conn.close()
                             self.__conn = None
                             API.logger.debug( SEPLINE )
-                            API.logger.debug( "Session: {session:<10}: SRC {local} DISCONNECT".format( local = self.__name, session = self.__session ) )
+                            API.logger.debug( "Session: {session:<10} SRC {local} DISCONNECT".format( local = self.__name, session = self.__session ) )
                             break
 
                         API.logger.debug( SEPLINE )
                         for line in data.decode( 'utf-8', 'replace' ).splitlines():
                             API.logger.debug( "Session: {session:<10} SRC {data}".format( session = self.__session, data = line ) )
 
-                        if API.hexd:
+                        if API.config.options.hexdump:
                             for line in hexdump.hexdump( data, 'generator' ):
                                 API.logger.debug( "Session: {session:<10} SRC {data}".format( session = self.__session, data = line ) )
 
@@ -175,7 +178,7 @@ class TcpTransfer( threading.Thread ):
 
                     elif rd == self.__destSock:
                         data = self.__destSock.recv( 4096*5 )
-                        if API.verbose or API.trace:
+                        if API.config.options.verbose or API.config.options.trace:
                             API.logger.info( "Session: {session:<10} Receive {remote:21} >> {local:21} length {length}{type}".format(
                                                 remote = self.__remote,
                                                 length = len( data ),
@@ -201,7 +204,7 @@ class TcpTransfer( threading.Thread ):
                                             data = line,
                                             session = self.__session ) )
 
-                        if API.hexd:
+                        if API.config.options.hexdump:
                             for line in hexdump.hexdump( data, 'generator' ):
                                 API.logger.debug( "Session: {session:<10} DST {data}".format(
                                                     session = self.__session,

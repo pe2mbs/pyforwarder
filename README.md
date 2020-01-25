@@ -1,4 +1,4 @@
-# pyforwarder a raw socket proxy with optional SSL/TLS termination and trace capability
+# forwarder a raw socket proxy with optional SSL/TLS termination and trace capability
 
 With this tool you can intercept communication between a server an a client, 
 assuming that you can alter the communication parameters of the client.
@@ -15,7 +15,7 @@ At this moment UDP messages is supported (unstable)
 ### PIP
 ```bash
 
-> pip install pyforwarder
+> pip install forwarder
 
 ```
 

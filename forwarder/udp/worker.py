@@ -18,44 +18,28 @@
 #   Boston, MA 02110-1301 USA
 #
 import traceback
-from socket import SHUT_RDWR
+import time
 import select
-import pyforwarder.api as API
-
-from pyforwarder.tcp.transfer import TcpTransfer
+import forwarder.api as API
 
 
-def tcpWorker( listeners ):
-    inputs = []
-    inputs.extend( listeners )
-    outputs = []
+def udpWorker( listeners ):
+    inputs = [ ]
+    for listener in listeners:
+        inputs.append( listener )
+
+    outputs = [ ]
     excepts = inputs
-    transfers = []
-    API.logger.info( "Running the listeners" )
     try:
         while inputs and API.running:
-            readable, writable, exceptional = select.select( inputs, outputs, excepts, 1.0 )
+            readable, writable, exceptional = select.select( inputs, outputs, excepts )
             for rd in readable:
-                connection, client_address = rd.accept()
-                connection.setblocking( 1 )
-                try:
-                    transfers.append( TcpTransfer( client_address, connection, rd ) )
+                rd.transfer( 4096 )
 
-                except Exception as exc:
-                    API.logger.error( traceback.format_exc() )
+            for ex in exceptional:
+                inputs.remove( ex )
 
-            for exc in exceptional:
-                inputs.remove( exc )
-
-            # On timeout of the select of after every connect
-            # check if there are sessions closed to be cleaned up.
-            idx = 0
-            while idx < len( transfers ):
-                if transfers[ idx ].cleanup():
-                    transfers.remove( transfers[ idx ] )
-
-                else:
-                    idx += 1
+        time.sleep( 1 )
 
     except KeyboardInterrupt:
         API.running = False
@@ -66,14 +50,6 @@ def tcpWorker( listeners ):
     finally:
         API.logger.info( "shudown the listeners" )
         for sock in listeners:
-            sock.shutdown( SHUT_RDWR )
             sock.close()
-
-        for tr in transfers:
-            tr.active = False
-            if API.verbose:
-                API.logger.info( "Joining tasks {}".format( tr ) )
-
-            tr.join()
 
     return

@@ -18,8 +18,8 @@
 #   Boston, MA 02110-1301 USA
 #
 import tempfile
-from pyforwarder.cfg.ssltls import ConfigSslTlsSet
-from pyforwarder.cfg.port import ConfigPort
+from forwarder.cfg.ssltls import ConfigSslTlsSet
+from forwarder.cfg.port import ConfigPort
 
 
 class ConfigAddressSet( object ):

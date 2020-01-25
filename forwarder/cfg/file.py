@@ -21,10 +21,10 @@ import logging
 import io
 import yaml
 import json
-from pyforwarder.cfg.options import ConfigOptions
-from pyforwarder.cfg.port import ConfigPort
-from pyforwarder.cfg.ports import WELL_DEFINED_PORTS
-from pyforwarder.cfg.host import ConfigHost
+from forwarder.cfg.options import ConfigOptions
+from forwarder.cfg.port import ConfigPort
+from forwarder.cfg.ports import WELL_DEFINED_PORTS
+from forwarder.cfg.host import ConfigHost
 
 logger = logging.getLogger()
 

@@ -18,7 +18,7 @@
 #   Boston, MA 02110-1301 USA
 #
 from socket import socket, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_REUSEADDR
-import pyforwarder.api as API
+import forwarder.api as API
 import hexdump
 
 

@@ -18,6 +18,7 @@
 #   Boston, MA 02110-1301 USA
 #
 import hashlib
+import base64
 import socket
 import json
 from typing import Union
@@ -45,8 +46,8 @@ class TcpSocket( socket.socket ):
         return
 
     def _initProxy( self, address: Union[tuple, str, bytes], **kwargs ):
-        data = socket.socket.recv( 1024 )
-        if not data.endswith( b'HELO' ):
+        data = socket.socket.recv( self, 1024 )
+        if not data.startswith( b'HELO' ):
             raise Exception( 'Invalid response from proxy server' )
 
         if isinstance( address, bytes ):
@@ -56,11 +57,12 @@ class TcpSocket( socket.socket ):
             address = address.split(':')
 
         m = hashlib.sha256()
-        userpass = "{}:{}".format( kwargs.get( 'username', 'guest' ), kwargs.get( 'password', 'guest' ) )
+        userpass = "{}:{}".format( kwargs.get( 'username', 'guest' ),
+                                   kwargs.get( 'password', 'guest' ) )
         m.update( userpass.encode( "ascii" ) )
         params = { 'addr': address[ 0 ],
                    'port': address[ 1 ],
-                   'userpass': m.digest() }
+                   'userpass': base64.b64encode( m.digest() ).decode('utf-8') }
 
         if 'ssl-tls' in kwargs:
             ssltls = kwargs.get( 'ssl-tls', { } )
@@ -90,7 +92,7 @@ class TcpSocket( socket.socket ):
 
                 params[ 'ssl-tls' ] = newSslTls
 
-        socket.socket.send( "ELOH {}".format( json.dumps( params ) ).encode( 'ascii' ) )
+        socket.socket.send( self, "OLEH {}".format( json.dumps( params ) ).encode( 'ascii' ) )
         return
 
     def connect( self, address: Union[tuple, str, bytes], **kwargs ) -> None:

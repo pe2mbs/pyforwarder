@@ -17,7 +17,7 @@
 #   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 #   Boston, MA 02110-1301 USA
 #
-from pyforwarder.cfg.addr import ConfigAddressSet
+from forwarder.cfg.addr import ConfigAddressSet
 
 
 class ConfigHost( object ):

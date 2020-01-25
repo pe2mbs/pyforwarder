@@ -22,11 +22,11 @@ import os
 import getopt
 import logging
 import logging.config
-import pyforwarder.api as API
-import pyforwarder.cfg.options as OPTIONS
-from pyforwarder.cfg.file import ConfigFile
-from pyforwarder.worker import worker
-from pyforwarder.version import __version__, __author__, __copyright__
+import forwarder.api as API
+import forwarder.cfg.options as OPTIONS
+from forwarder.cfg.file import ConfigFile
+from forwarder.worker import worker
+from forwarder.version import __version__, __author__, __copyright__
 
 
 def usage():

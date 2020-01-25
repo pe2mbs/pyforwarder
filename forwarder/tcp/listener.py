@@ -18,7 +18,7 @@
 #   Boston, MA 02110-1301 USA
 #
 import os
-import pyforwarder.api as API
+import forwarder.api as API
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 
 
@@ -45,8 +45,11 @@ class TcpListener( socket ):
         self.setsockopt( SOL_SOCKET, SO_REUSEADDR, 1 )
         self.bind( ( self.addr, self.port ) )
         self.listen( listen )
+        if self.destination.proxy:
+            API.logger.info( 'TCP listening on {}:{} as a raw proxy'.format( self.addr, self.port ) )
 
-        API.logger.info( 'TCP listening on {}:{} forward to {}:{} = "{}"'.format( self.addr,
+        else:
+            API.logger.info( 'TCP listening on {}:{} forward to {}:{} = "{}"'.format( self.addr,
                                                                        self.port,
                                                                        self.destination.addr,
                                                                        self.destination.port,

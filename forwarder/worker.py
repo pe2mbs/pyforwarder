@@ -18,9 +18,9 @@
 #   Boston, MA 02110-1301 USA
 #
 import threading
-from pyforwarder.tcp import TcpListener, tcpWorker
-from pyforwarder.udp import udpListener, udpWorker
-import pyforwarder.api as API
+from forwarder.tcp import TcpListener, tcpWorker
+from forwarder.udp import udpListener, udpWorker
+import forwarder.api as API
 
 
 def worker():
@@ -45,12 +45,20 @@ def worker():
                 udpListeners.extend( udpListener( addr ) )
 
     API.running = True
-    tcpThread = threading.Thread( target = tcpWorker, args = ( tcpListeners, ) )
-    tcpThread.start()
+    tcpThread = None
+    udpThread = None
+    if len( tcpListeners ):
+        tcpThread = threading.Thread( target = tcpWorker, args = ( tcpListeners, ) )
+        tcpThread.start()
 
-    udpThread = threading.Thread( target = udpWorker, args = ( udpListeners, ) )
-    udpThread.start()
+    if len( udpListeners ):
+        udpThread = threading.Thread( target = udpWorker, args = ( udpListeners, ) )
+        udpThread.start()
 
-    udpThread.join()
-    tcpThread.join()
+    if len( udpListeners ):
+        udpThread.join()
+
+    if len( tcpListeners ):
+        tcpThread.join()
+
     return

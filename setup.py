@@ -19,17 +19,17 @@
 #
 # Always prefer setuptools over distutils
 import setuptools
-from pyforwarder.version import __version__, __author__, __copyright__, __email__, __url__
+from forwarder.version import __version__, __author__, __copyright__, __email__, __url__
 
 with open( "README.md", "r") as stream:
     long_description = stream.read()
 
 setuptools.setup(
-    name="pyforwarder", # Replace with your own username
+    name="forwarder", # Replace with your own username
     version=__version__,
     author=__author__,
     author_email=__email__,
-    description="pyforwarder a raw socket proxy with optional SSL/TLS termination and trace capability",
+    description="forwarder a raw socket proxy with optional SSL/TLS termination and trace capability",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url=__url__,
@@ -42,20 +42,30 @@ setuptools.setup(
     },
     install_requires = [ 'pyyaml' ],
     classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU Library General Public License 2.0 (GPL-2.0-only)",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: Communications",
+        "Topic :: Education :: Testing",
+        "Topic :: Internet",
+        "Topic :: Internet :: Proxy Servers",
+        "Topic :: Software Development",
+        "Topic :: Utilities",
+        "Natural Language :: English",
+        "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
     entry_points={
         "console_scripts": [
-            "pyforwarder = pyforwarder.__main__:start"
+            "pyforwarder = forwarder.__main__:start"
         ]
     },
     package_data={
         # If any package contains *.txt or *.rst files, include them:
         "": [ "*.md" ],
         # And include any *.msg files found in the "hello" package, too:
-        "pyforwarder": [ "*.yaml" ],
+        "forwarder": [ "*.yaml" ],
     }
 )
