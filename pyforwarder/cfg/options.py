@@ -17,6 +17,24 @@
 #   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 #   Boston, MA 02110-1301 USA
 #
-config = None
-logger = None
-running = False
+verbose = False
+trace = False
+hexd = False
+
+
+class ConfigOptions( object ):
+    def __init__( self, cfg ):
+        self.__cfg = cfg
+        return
+
+    @property
+    def verbose( self ):
+        return self.__cfg.get( 'verbose', verbose )
+
+    @property
+    def trace( self ):
+        return self.__cfg.get( 'trace', trace )
+
+    @property
+    def hexdump( self ):
+        return self.__cfg.get( 'hexdump', hexd )

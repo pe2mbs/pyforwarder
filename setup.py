@@ -40,6 +40,7 @@ setuptools.setup(
         "Documentation": __url__+ '/wiki',
         "Source Code": __url__,
     },
+    install_requires = [ 'pyyaml' ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU Library General Public License 2.0 (GPL-2.0-only)",

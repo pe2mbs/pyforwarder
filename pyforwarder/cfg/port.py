@@ -17,6 +17,28 @@
 #   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 #   Boston, MA 02110-1301 USA
 #
-config = None
-logger = None
-running = False
+
+class ConfigPort( object ):
+    def __init__( self, port_name, settings ):
+        self.__portName = port_name
+        self.__settings = settings
+        return
+
+    @property
+    def portName( self ):
+        return self.__portName
+
+    @property
+    def port( self ):
+        return self.__settings[ 'port' ]
+
+    @property
+    def description( self ):
+        return self.__settings[ 'description' ]
+
+    @property
+    def protocol( self ):
+        return self.__settings[ 'protocol' ]
+
+    def toDict( self ):
+        return { self.__portName: self.__settings }

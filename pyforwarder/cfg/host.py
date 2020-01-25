@@ -17,6 +17,29 @@
 #   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 #   Boston, MA 02110-1301 USA
 #
-config = None
-logger = None
-running = False
+from pyforwarder.cfg.addr import ConfigAddressSet
+
+
+class ConfigHost( object ):
+    def __init__( self, cfg, ports ):
+        self.__src = ConfigAddressSet( cfg[ 'source' ], ports )
+        self.__dst = ConfigAddressSet( cfg[ 'destination' ], ports )
+        self.__enabled  = cfg.get( 'enabled', True )
+        return
+
+    @property
+    def enabled( self ):
+        return self.__enabled
+
+    @property
+    def source( self ):
+        return self.__src
+
+    @property
+    def destination( self ):
+        return self.__dst
+
+    def toDict( self ):
+        return { 'source': self.__src.toDict(),
+                 'destination': self.__dst.toDict() }
+

@@ -18,10 +18,8 @@
 #   Boston, MA 02110-1301 USA
 #
 import threading
-from pyforwarder.tcp.listener import TcpListener
-from pyforwarder.tcp.worker import tcpWorker
-from pyforwarder.udp.listener import udpListener
-from pyforwarder.udp.worker import udpWorker
+from pyforwarder.tcp import TcpListener, tcpWorker
+from pyforwarder.udp import udpListener, udpWorker
 import pyforwarder.api as API
 
 

@@ -23,7 +23,8 @@ import getopt
 import logging
 import logging.config
 import pyforwarder.api as API
-from pyforwarder.config import ConfigFile
+import pyforwarder.cfg.options as OPTIONS
+from pyforwarder.cfg.file import ConfigFile
 from pyforwarder.worker import worker
 from pyforwarder.version import __version__, __author__, __copyright__
 
@@ -56,7 +57,7 @@ def main( argv ):
     banner()
     API.logger = logging.getLogger()
     try:
-        opts, args = getopt.getopt( sys.argv[ 1: ], "htHv", [ "help", "trace", "hexdump" ] )
+        opts, args = getopt.getopt( argv, "htHv", [ "help", "trace", "hexdump" ] )
 
     except getopt.GetoptError as err:
         # print help information and exit:
@@ -66,13 +67,13 @@ def main( argv ):
 
     for o,a in opts:
         if o == "-v":
-            API.verbose = True
+            OPTIONS.verbose = True
 
         elif o in ( "-t","--trace"):
-            API.trace = True
+            OPTIONS.trace = True
 
         elif o in ( "-H","--hexdump" ):
-            API.hexd = True
+            OPTIONS.hexd = True
 
         elif o in ( "-h", "--help" ):
             usage()
@@ -94,7 +95,6 @@ def main( argv ):
         print( "Configuration file '{}' could not be found".format( configFile ) )
         exit( -2 )
 
-    API.config.options.updateGlobals()
     logging.config.dictConfig( API.config.logging )
     API.logger.setLevel( logging.ERROR )
     if API.config.options.verbose:
