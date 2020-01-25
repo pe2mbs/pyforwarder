@@ -17,9 +17,39 @@
 #   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 #   Boston, MA 02110-1301 USA
 #
-verbose = False
-trace = False
-hexd = False
-config = None
-logger = None
-running = False
+import traceback
+import time
+import select
+import pyforwarder.api as API
+
+
+def udpWorker( listeners ):
+    inputs = [ ]
+    for listener in listeners:
+        inputs.append( listener )
+
+    outputs = [ ]
+    excepts = inputs
+    try:
+        while inputs and API.running:
+            readable, writable, exceptional = select.select( inputs, outputs, excepts )
+            for rd in readable:
+                rd.transfer( 4096 )
+
+            for ex in exceptional:
+                inputs.remove( ex )
+
+        time.sleep( 1 )
+
+    except KeyboardInterrupt:
+        API.running = False
+
+    except Exception:
+        API.logger.error( traceback.format_exc() )
+
+    finally:
+        API.logger.info( "shudown the listeners" )
+        for sock in listeners:
+            sock.close()
+
+    return

@@ -1,3 +1,22 @@
+#
+#   pyforwarder a raw socket proxy with optional SSL/TLS termination and trace capability
+#   Copyright (C) 2018-2020 Marc Bertens-Nguyen m.bertens@pe2mbs.nl
+#
+#   This library is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU Library General Public License GPL-2.0-only
+#   as published by the Free Software Foundation; either version 2 of the
+#   License, or (at your option) any later version.
+#
+#   This library is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+#   Library General Public License for more details.
+#
+#   You should have received a copy of the GNU Library General Public
+#   License GPL-2.0-only along with this library; if not, write to the
+#   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+#   Boston, MA 02110-1301 USA
+#
 import sys
 import os
 import getopt
@@ -6,10 +25,7 @@ import logging.config
 import pyforwarder.api as API
 from pyforwarder.config import ConfigFile
 from pyforwarder.worker import worker
-
-__version__     = '0.11.002'
-__author__      = 'Marc Bertens-Nguyen'
-__copyright__   = '(c) 2019 - 2020, Marc Bertens-Nguyen, the Netherlands'
+from pyforwarder.version import __version__, __author__, __copyright__
 
 
 def usage():
@@ -92,4 +108,10 @@ def main( argv ):
     return
 
 
-# main( sys.argv[ 1 : ] )
+def start():
+    import sys
+    main( sys.argv[ 1: ] )
+
+
+if __name__ == '__main__':
+    start()

@@ -1,3 +1,22 @@
+#
+#   pyforwarder a raw socket proxy with optional SSL/TLS termination and trace capability
+#   Copyright (C) 2018-2020 Marc Bertens-Nguyen m.bertens@pe2mbs.nl
+#
+#   This library is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU Library General Public License GPL-2.0-only
+#   as published by the Free Software Foundation; either version 2 of the
+#   License, or (at your option) any later version.
+#
+#   This library is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+#   Library General Public License for more details.
+#
+#   You should have received a copy of the GNU Library General Public
+#   License GPL-2.0-only along with this library; if not, write to the
+#   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+#   Boston, MA 02110-1301 USA
+#
 import traceback
 import ssl
 import json
@@ -10,14 +29,14 @@ from socket import socket, AF_INET, SOCK_STREAM, SHUT_RDWR
 SEPLINE = '-' * 60
 
 
-class Transfer( threading.Thread ):
+class TcpTransfer( threading.Thread ):
     SESSION_ID = 1
 
     def __init__( self, local, connection, sock ):
         self.__active = True
         threading.Thread.__init__( self )
-        self.__session = Transfer.SESSION_ID
-        Transfer.SESSION_ID += 1
+        self.__session = TcpTransfer.SESSION_ID
+        TcpTransfer.SESSION_ID += 1
         self.__name = "{}:{}".format( *local )
         self.__conn = connection
         self.__dest = sock.destination
@@ -29,9 +48,23 @@ class Transfer( threading.Thread ):
                             lport = local[ 1 ],
                             remote = sock.addr,
                             rport = sock.port ) )
-
         API.logger.debug( SEPLINE )
         API.logger.debug( "Session: {session:<10} SRC CONNECT".format( session = self.__session ) )
+
+        if self.__dest.proxy:
+            self.__conn.send( "HELO pyforwarder TCP proxy" )
+            data = self.__conn.recv( 1024 * 20 )
+            if data.startswith( b'OLEH ' ):
+                data = json.loads( data.decode( 'utf-8' )[4:] )
+                if data[ 'username' ] == self.__dest.username or data[ 'password' ] == self.__dest.password:
+                    self.__dest.setProxy( data )
+
+                else:
+                    raise Exception( "Incorrect username/password from client on OLEH" )
+
+            else:
+                raise Exception( "Incorrect answer from client on HELO" )
+
         if self.__dest.useSslTls:
             # need to handle SSL/TLS in the forwarder
             self.__sslSock = self.__destSock

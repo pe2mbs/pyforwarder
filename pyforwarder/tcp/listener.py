@@ -1,8 +1,28 @@
+#
+#   pyforwarder a raw socket proxy with optional SSL/TLS termination and trace capability
+#   Copyright (C) 2018-2020 Marc Bertens-Nguyen m.bertens@pe2mbs.nl
+#
+#   This library is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU Library General Public License GPL-2.0-only
+#   as published by the Free Software Foundation; either version 2 of the
+#   License, or (at your option) any later version.
+#
+#   This library is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+#   Library General Public License for more details.
+#
+#   You should have received a copy of the GNU Library General Public
+#   License GPL-2.0-only along with this library; if not, write to the
+#   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+#   Boston, MA 02110-1301 USA
+#
 import os
 import pyforwarder.api as API
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 
-class Listener( socket ):
+
+class TcpListener( socket ):
     def __init__( self, addr, port, destination, listen = 2 ):
         self.__addr = addr
         self.__port = port
@@ -26,7 +46,7 @@ class Listener( socket ):
         self.bind( ( self.addr, self.port ) )
         self.listen( listen )
 
-        API.logger.info( 'listening on {}:{} forward to {}:{} = "{}"'.format( self.addr,
+        API.logger.info( 'TCP listening on {}:{} forward to {}:{} = "{}"'.format( self.addr,
                                                                        self.port,
                                                                        self.destination.addr,
                                                                        self.destination.port,

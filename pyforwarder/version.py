@@ -17,9 +17,9 @@
 #   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 #   Boston, MA 02110-1301 USA
 #
-verbose = False
-trace = False
-hexd = False
-config = None
-logger = None
-running = False
+# Always prefer setuptools over distutils
+__version__     = '0.11.002'
+__author__      = 'Marc Bertens-Nguyen'
+__email__       = 'm.bertens@pe2mbs.nl'
+__copyright__   = '(c) 2019 - 2020, Marc Bertens-Nguyen, the Netherlands'
+__url__         = 'https://github.com/pe2mbs/pyforwarder'
