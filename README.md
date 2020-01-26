@@ -33,8 +33,11 @@ At this moment UDP messages is supported (unstable)
 
 ```
 
-##    
-
+## Package version
+The version of the package is as follows: **x.y.z**
+Where **x** is the major version number
+Where **y** is the minor version number
+Where **z** is the build number
 
 ## Basic operation
 The basic operation is simple start the forwarder with a configuration file.
@@ -252,6 +255,76 @@ protocol name with the following attributes;
             is used. 
 See section **predefined ports**
 
+# Tests
+For the following test scripts, pyforwarder must be started with the following configuration 
+items in the config file. 
+```yaml
+ports:
+  raw-proxy:
+    port: 18080
+    protocol: tcp
+    description: TCP raw proxy
+hosts:
+- source:
+    addr: localhost
+    port: raw-proxy
+  destination:
+    proxy:  true
+    username: guest
+    password: guest
+```
+
+## testproxy.py
+```python
+import forwarder.psocket as socket
+
+proxyConfig = dict( proxy = ( "localhost", 18080 ),
+                    username = 'guest',
+                    password = 'guest' )
+
+sock = socket.socket()
+sock.connect( ( "smtp.gmail.com", 25 ), **proxyConfig )
+
+data = sock.recv(1024)
+print( data )
+sock.close()
+print( "Done" )
+```
+
+## hookproxy.py
+```python
+import forwarder.hook
+import socket
+import requests
+
+forwarder.hook.proxyConfig = dict( proxy = ( "localhost", 18080 ),
+                                   username = 'guest',
+                                   password = 'guest' )
+
+
+sock = socket.socket()
+sock.connect( ( "smtp.gmail.com", 25 ) )
+
+data = sock.recv(1024)
+print( data )
+
+sock.close()
+
+#
+#   Do a HTTP call with requests
+#
+result = requests.get( "http://google.nl" )
+print( result.content.decode( 'utf-8' ) )
+
+#
+#   Do a HTTPS call with requests
+#   Note that in goes in clear-text where the rest
+#   of the session is SSL/TLS encrypted
+#
+result = requests.get( "https://google.nl" )
+print( result.content.decode( 'utf-8' ) )
+print( "Done" )
+```
 
 ## Predefined ports
 The predefined ports: 
@@ -423,32 +496,4 @@ The predefined ports:
     port: 8080
     description: WWW caching service proxyservers and Apache Tomcat
     protocol: tcp
-```
-
-## testproxy.py
-```python
-import forwarder.psocket as socket
-
-proxyConfig = dict( proxy = ( "localhost", 18080 ),
-                    username = 'guest',
-                    password = 'guest' )
-
-sock = socket.socket()
-sock.connect( ( "mail.example.nl", 25 ), **proxyConfig )
-
-data = sock.recv(1024)
-print( data )
-
-sock.close()
-
-
-print( "Done" )
-```
-
-## hookproxy.py
-```python
-
-
-
-
 ```

@@ -28,7 +28,4 @@ print( result.content.decode( 'utf-8' ) )
 #
 result = requests.get( "https://google.nl" )
 print( result.content.decode( 'utf-8' ) )
-
-
-
 print( "Done" )
