@@ -17,14 +17,17 @@
 #   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 #   Boston, MA 02110-1301 USA
 #
+import os
 import socket
-import forwarder._psockmixin
+import yaml
+import json
 from typing import Union, Optional
+import forwarder._psockmixin
+proxyConfig = None
 
 _socket = socket.socket
 
-
-class TcpSocket( _socket, forwarder._psockmixin.SocketMixin ):
+class _hookSocket( _socket, forwarder._psockmixin.SocketMixin ):
     """This is a snap-in replacement for the socket.socket class.
     The connect() end connect_ex() calls have optional the following
     parameters:
@@ -46,28 +49,36 @@ class TcpSocket( _socket, forwarder._psockmixin.SocketMixin ):
         _socket.__init__( self, family, type, proto, fileno )
         return
 
-    def connect( self, address: Union[tuple, str, bytes], **kwargs ) -> None:
-        if 'proxy' in kwargs:
-            proxy = kwargs[ 'proxy' ]
-            if not isinstance( proxy, ( tuple, str, bytes ) ):
-                raise Exception( 'Invalid prox address' )
 
-            _socket.connect( self, proxy )
-            self._initProxy( address, **kwargs )
+
+    def connect( self, address: Union[tuple, str, bytes] ) -> None:
+        global proxyConfig
+
+        if proxyConfig is not None:
+            _socket.connect( self, tuple( proxyConfig[ 'proxy' ] ) )
+            self._initProxy( address, **proxyConfig )
+
+        elif 'RAW_PROXY_CFG' in os.environ:
+            proxyConfig = self._loadConfig( os.environ[ 'RAW_PROXY_CFG' ] )
+            _socket.connect( self, tuple( proxyConfig[ 'proxy' ] ) )
+            self._initProxy( address, **proxyConfig )
 
         else:
             _socket.connect( self, address )
 
         return
 
-    def connect_ex(self, address: Union[tuple, str, bytes], **kwargs ) -> int:
-        if 'proxy' in kwargs:
-            proxy = kwargs[ 'proxy' ]
-            if not isinstance( proxy, ( tuple, str, bytes ) ):
-                raise Exception( 'Invalid prox address' )
+    def connect_ex(self, address: Union[tuple, str, bytes] ) -> int:
+        global proxyConfig
 
-            _socket.connect_ex( self, proxy )
-            self._initProxy( address, **kwargs )
+        if proxyConfig is not None:
+            _socket.connect( self, tuple( proxyConfig[ 'proxy' ] ) )
+            self._initProxy( address, **proxyConfig )
+
+        elif 'RAW_PROXY_CFG' in os.environ:
+            proxyConfig = self._loadConfig( os.environ[ 'RAW_PROXY_CFG' ] )
+            _socket.connect_ex( self, tuple( proxyConfig[ 'proxy' ] ) )
+            self._initProxy( address, **proxyConfig )
 
         else:
             _socket.connect_ex( self, address )
@@ -75,4 +86,4 @@ class TcpSocket( _socket, forwarder._psockmixin.SocketMixin ):
         return
 
 
-socket = TcpSocket
+socket.socket = _hookSocket
