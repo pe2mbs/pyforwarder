@@ -54,10 +54,16 @@ class TcpTransfer( threading.Thread ):
         API.logger.debug( "Session: {session:<10} SRC CONNECT".format( session = self.__session ) )
 
         if self.__dest.proxy:
-            self.__conn.send( b"HELO forwarder TCP proxy" )
-            data = self.__conn.recv( 1024 * 20 )
+            API.logger.debug( "Session: {session:<10} SRC PROXY HELO 020:forwarder TCP proxy".format( session = self.__session ) )
+            self.__conn.send( b"HELO 020:forwarder TCP proxy\n" )
+            data = self.__conn.recv( 9 )
             if data.startswith( b'OLEH ' ):
-                data = json.loads( data.decode( 'utf-8' )[4:] )
+                display = data.decode( 'utf-8' )
+                data = self.__conn.recv( int( data[ 5:8 ] ) )
+                display += data.decode( 'utf-8' )
+                API.logger.debug( "Session: {session:<10} SRC PROXY {data}".format( session = self.__session,
+                                                                                    data = display ) )
+                data = json.loads( data.decode( 'utf-8' ) )
                 m = hashlib.sha256()
                 userpass = "{}:{}".format( self.__dest.username, self.__dest.password )
                 m.update( userpass.encode( "ascii" ) )

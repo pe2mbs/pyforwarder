@@ -17,14 +17,18 @@
 #   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 #   Boston, MA 02110-1301 USA
 #
+import os
 import hashlib
 import base64
 import socket
 import json
-from typing import Union
+import yaml
+from typing import Union, Optional
+proxyConfig = None
 
+_socket = socket.socket
 
-class TcpSocket( socket.socket ):
+class TcpSocket( _socket ):
     """This is a snap-in replacement for the socket.socket class.
     The connect() end connect_ex() calls have optional the following
     parameters:
@@ -41,8 +45,9 @@ class TcpSocket( socket.socket ):
     *   ca-bundle:      str with the data from ca-build file
 
     """
-    def __init__( self ):
-        socket.socket.__init__( self, socket.AF_INET, socket.SOCK_STREAM )
+    def __init__( self, family: int = socket.AF_INET, type: int = socket.SOCK_STREAM,
+                        proto: int = 0, fileno: Optional[int] = None ):
+        _socket.__init__( self, family, type, proto, fileno )
         return
 
     def _initProxy( self, address: Union[tuple, str, bytes], **kwargs ):
@@ -92,20 +97,42 @@ class TcpSocket( socket.socket ):
 
                 params[ 'ssl-tls' ] = newSslTls
 
-        socket.socket.send( self, "OLEH {}".format( json.dumps( params ) ).encode( 'ascii' ) )
+        data = json.dumps( params )
+        _socket.send( self, "OLEH {:03}:{}".format( len( data ), data ).encode( 'ascii' ) )
         return
 
     def connect( self, address: Union[tuple, str, bytes], **kwargs ) -> None:
+        global proxyConfig
+
         if 'proxy' in kwargs:
             proxy = kwargs[ 'proxy' ]
             if not isinstance( proxy, ( tuple, str, bytes ) ):
                 raise Exception( 'Invalid prox address' )
 
-            socket.socket.connect( self, proxy )
+            _socket.connect( self, proxy )
             self._initProxy( address, **kwargs )
 
+        elif proxyConfig is not None:
+            _socket.connect( self, tuple( proxyConfig[ 'proxy' ] ) )
+            self._initProxy( address, **proxyConfig )
+
+        elif 'RAW_PROXY_CFG' in os.environ:
+            filename = os.environ[ 'RAW_PROXY_CFG' ]
+            with open( filename, 'r' ) as stream:
+                if filename.lower().endswith( '.json' ):
+                    proxyConfig = json.load( stream )
+
+                elif filename.lower().endswith( '.yaml' ):
+                    proxyConfig = yaml.load( stream, Loader = yaml.Loader )
+
+                else:
+                    raise Exception( "Invalid file type for {}".format( filename ) )
+
+            _socket.connect( self, tuple( proxyConfig[ 'proxy' ] ) )
+            self._initProxy( address, **proxyConfig )
+
         else:
-            socket.socket.connect( self, address )
+            _socket.connect( self, address )
 
         return
 
@@ -115,10 +142,13 @@ class TcpSocket( socket.socket ):
             if not isinstance( proxy, ( tuple, str, bytes ) ):
                 raise Exception( 'Invalid prox address' )
 
-            socket.socket.connect_ex( self, proxy )
+            _socket.connect_ex( self, proxy )
             self._initProxy( address, **kwargs )
 
         else:
-            socket.socket.connect_ex( self, address )
+            _socket.connect_ex( self, address )
 
         return
+
+
+socket.socket = TcpSocket
