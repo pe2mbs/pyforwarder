@@ -18,7 +18,7 @@
 #   Boston, MA 02110-1301 USA
 #
 # Always prefer setuptools over distutils
-__version__     = '0.11.005'
+__version__     = '0.12.034'
 __author__      = 'Marc Bertens-Nguyen'
 __email__       = 'm.bertens@pe2mbs.nl'
 __copyright__   = '(c) 2019 - 2020, Marc Bertens-Nguyen, the Netherlands'

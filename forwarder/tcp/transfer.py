@@ -26,7 +26,7 @@ import hexdump
 import select
 import threading
 import forwarder.api as API
-from socket import socket, AF_INET, SOCK_STREAM, SHUT_RDWR
+from socket import socket, AF_INET, SOCK_STREAM, SHUT_RDWR, gaierror
 
 SEPLINE = '-' * 60
 
@@ -118,7 +118,21 @@ class TcpTransfer( threading.Thread ):
                 API.logger.info( "CheckHost : {}".format( self.__dest.sslTls.checkHost ) )
                 self.__destSock.context.check_hostname = self.__dest.sslTls.checkHost
 
-        self.__destSock.connect( ( self.__dest.addr, self.__dest.port ) )
+        try:
+            self.__destSock.connect( ( self.__dest.addr, self.__dest.port ) )
+
+        except gaierror as exc:
+            API.logger.debug( "Session: {session:<10} DST {addr}:{port} {exc}".format( session = self.__session,
+                                                                            addr = self.__dest.addr,
+                                                                            port = self.__dest.port,
+                                                                            exc = exc ) )
+            self.__conn.close()
+            raise exc from None
+
+        except Exception as exc:
+            self.__conn.close()
+            raise exc from None
+
         self.__remote = "{}:{}".format( *self.__destSock.getpeername() )
         API.logger.debug( "Session: {session:<10} DST CONNECT".format( session = self.__session ) )
         self.start()

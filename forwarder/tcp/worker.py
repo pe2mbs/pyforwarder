@@ -18,7 +18,7 @@
 #   Boston, MA 02110-1301 USA
 #
 import traceback
-from socket import SHUT_RDWR
+from socket import SHUT_RDWR, gaierror
 import select
 import forwarder.api as API
 
@@ -40,6 +40,9 @@ def tcpWorker( listeners ):
                 connection.setblocking( 1 )
                 try:
                     transfers.append( TcpTransfer( client_address, connection, rd ) )
+
+                except gaierror as exc:
+                    pass
 
                 except Exception as exc:
                     API.logger.error( traceback.format_exc() )

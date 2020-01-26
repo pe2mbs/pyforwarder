@@ -19,8 +19,6 @@
 #
 import os
 import socket
-import yaml
-import json
 from typing import Union, Optional
 import forwarder._psockmixin
 proxyConfig = None

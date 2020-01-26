@@ -1,7 +1,12 @@
 # forwarder a raw socket proxy with optional SSL/TLS termination and trace capability
+With this tool you can intercept communication between a server an a client. Its 
+specially handy for tracing/debugging communication from a client to server, reverse 
+engineering a protocol stack. 
 
-With this tool you can intercept communication between a server an a client, 
-assuming that you can alter the communication parameters of the client.
+For your own Python script with minor change the traffic is routed to forwarder.  
+
+This can also be an external application assuming that you can alter the communication 
+parameters of the application.
 
 It can optionally also perform the SSL/TLS termination to the server, so that
 the communication to the client is in clear text.
@@ -32,13 +37,14 @@ At this moment UDP messages is supported (unstable)
 
 
 ## Basic operation
-The basic operation is simple start the pyforwarder with a configuration file.
+The basic operation is simple start the forwarder with a configuration file.
 
 ```bash
 
 > pyforwarder config-example.yaml
 
 ```
+**NOTE** that the startup script is called pyforwarder.
 
 Depending on the settings it shows the program banner and optionally verbose 
 and trace information what is happing.
@@ -61,8 +67,19 @@ with optional the username and password (these are send in encoded over the sess
 The proxy handshake is simple the server says HELO <name> and the client respond 
 with OLEH <json-parameters>      
 
-the pyforwarder.csocket module contains a class TcpSocket where this mechanism is
-implemented.
+the forwarder.csocket module contains a class TcpSocket where this mechanism is
+implemented. it also declares socket. for easy replacement of the `import socket` 
+
+```python
+import forwarder.csocket as socket
+```
+By using this traffic on hat socket will be routed to the forwarder. 
+See for more information the test script **testproxy.py**.
+
+If you need all traffic from you application routed through the forwarder proxy, 
+you can `import forwarder.hook` in the main file of your project, and all sessions 
+will be routed through the forwarder proxy.
+See for more information the test script **hookproxy.py**
 
 **NOTE:** proxy socket works only for TCP sessions.
 
@@ -153,7 +170,7 @@ hosts:
   enabled: false
   # froward port 18080 on 192.168.123.100 to xxx.xxx.xxx.xxx:yyyyy
   # the actual address, port, ssl info are provided via the TcpSocket
-  # class in pyforwarder.psocket
+  # class in forwarder.psocket
 - source:
     addr: 192.168.123.100
     port: 18080
@@ -233,7 +250,10 @@ protocol name with the following attributes;
 * description: the description of the protcol
 * protocol: may be set to TCP and/or UDP, when both need to be set the list syntax
             is used. 
+See section **predefined ports**
 
+
+## Predefined ports
 The predefined ports: 
 ```yaml
   ftp:          
@@ -403,4 +423,32 @@ The predefined ports:
     port: 8080
     description: WWW caching service proxyservers and Apache Tomcat
     protocol: tcp
+```
+
+## testproxy.py
+```python
+import forwarder.psocket as socket
+
+proxyConfig = dict( proxy = ( "localhost", 18080 ),
+                    username = 'guest',
+                    password = 'guest' )
+
+sock = socket.socket()
+sock.connect( ( "mail.example.nl", 25 ), **proxyConfig )
+
+data = sock.recv(1024)
+print( data )
+
+sock.close()
+
+
+print( "Done" )
+```
+
+## hookproxy.py
+```python
+
+
+
+
 ```
