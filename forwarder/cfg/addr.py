@@ -96,24 +96,26 @@ class ConfigAddressSet( object ):
         self.__cfg[ 'port' ] = data[ 'port' ]
         self.__cfg[ 'username' ] = data.get( 'username', 'guest' )
         self.__cfg[ 'password' ] = data.get( 'password', 'guest' )
-        if 'use-ssl-tls' in data:
-            self.__cfg[ 'use-ssl-tls' ] = data[ 'use-ssl-tls' ]
-            ssltls = data[ 'ssl-tls' ]
-            if 'ca-bundle' in ssltls:
+        if 'ssltls' in data:
+            self.__cfg[ 'use-ssl-tls' ] = True
+            ssltls = data[ 'ssltls' ]
+            if 'cabundle' in data:
                 with tempfile.NamedTemporaryFile( mode= 'w', delete = False ) as stream:
-                    stream.write( ssltls[ 'ca-bundle' ] )
+                    stream.write( data[ 'cabundle' ] )
                     ssltls[ 'ca-bundle' ] = stream.name
 
-            if 'certificate' in ssltls:
+                del ssltls[ 'cabundle' ]
+
+            if 'certificate' in data:
                 with tempfile.NamedTemporaryFile( mode= 'w', delete = False ) as stream:
-                    stream.write( ssltls[ 'certificate' ] )
+                    stream.write( data[ 'certificate' ] )
                     ssltls[ 'certificate' ] = stream.name
 
-            if 'key' in ssltls:
+            if 'key' in data:
                 with tempfile.NamedTemporaryFile( mode= 'w', delete = False ) as stream:
-                    stream.write( ssltls[ 'key' ] )
+                    stream.write( data[ 'key' ] )
                     ssltls[ 'key' ] = stream.name
 
-            self.__cfg[ 'ssl-tls' ] = ssltls
+            self.__cfg[ 'ssltls' ] = ssltls
 
         return

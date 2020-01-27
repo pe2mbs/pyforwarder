@@ -1,6 +1,6 @@
 # forwarder a raw socket proxy with optional SSL/TLS termination and trace capability
-With this tool you can intercept communication between a server an a client. Its 
-specially handy for tracing/debugging communication from a client to server, reverse 
+With this tool you can intercept communication between server and client. Its 
+specially handy for tracing/debugging communication from client to server, reverse 
 engineering a protocol stack. 
 
 For your own Python script with minor change the traffic is routed to forwarder.  
@@ -67,21 +67,21 @@ For proxy socket in the configuration the source address and port must be define
 where pyforwarder listens on. And for the destination the proxy must be enabled
 with optional the username and password (these are send in encoded over the session).      
 
-The proxy handshake is simple the server says HELO <name> and the client respond 
-with OLEH <json-parameters>      
+The proxy handshake is simple the server says HELO <len3>:<name> and the client respond 
+with OLEH <len3>:<json-parameters>      
 
 the forwarder.csocket module contains a class TcpSocket where this mechanism is
-implemented. it also declares socket. for easy replacement of the `import socket` 
+implemented. it also declares socket, for easy replacement of the `import socket` 
 
 ```python
 import forwarder.csocket as socket
 ```
-By using this traffic on hat socket will be routed to the forwarder. 
+By using this, traffic on those sockets will be routed to the forwarder. 
 See for more information the test script **testproxy.py**.
 
 If you need all traffic from you application routed through the forwarder proxy, 
-you can `import forwarder.hook` in the main file of your project, and all sessions 
-will be routed through the forwarder proxy.
+you can `import forwarder.hook` in the main file of your project, before the 
+`import socket`, and all sessions will be routed through the forwarder proxy.
 See for more information the test script **hookproxy.py**
 
 **NOTE:** proxy socket works only for TCP sessions.
@@ -111,7 +111,7 @@ logging:
   handlers:
     console:
       class: logging.StreamHandler
-      level: DEBUG
+      level: ERROR
       formatter: verbose
       stream: ext://sys.stdout
     file:
@@ -291,6 +291,25 @@ sock.close()
 print( "Done" )
 ```
 
+When SSL/TLS termination is needed by the forwarder the the kwargs must contain the 
+SSL/TLS parameters as follows;
+```python
+proxyConfig = dict( proxy = ( "localhost", 18080 ),
+                    username = 'guest',
+                    password = 'guest',
+                    ssltls = dict( verify = True,
+                                   checkhost = False,
+                                   required = 'optional',
+                                   cabundle = open( 'cabundle-filename', 'r' ).read(),
+                                   key = open( 'cabundle-filename', 'r' ).read(),
+                                   certifcate = open( 'cabundle-filename', 'r' ).read()
+                    ) )
+```
+When providing `cabundle` the attributes `key` and `certifcate` are mutually exclusive.  
+
+**NOTE:** the attributes have the same names as in the configuration file, with `-` removed.
+
+
 ## hookproxy.py
 ```python
 import forwarder.hook
@@ -325,6 +344,10 @@ result = requests.get( "https://google.nl" )
 print( result.content.decode( 'utf-8' ) )
 print( "Done" )
 ```
+
+**NOTE:** when SSL/TLS certifcates are needed for some connections, ou need to change
+`forwarder.hook.proxyConfig` before the connection setup. At this time cannot set the
+SSL/TLS parameters specific to connections only global.   
 
 ## Predefined ports
 The predefined ports: 
